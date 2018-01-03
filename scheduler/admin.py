@@ -5,12 +5,14 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from scheduler.models import CronJob, RepeatableJob, ScheduledJob
+from scheduler.forms import JobAdminForm
 
 
 QUEUES = [(key, key) for key in settings.RQ_QUEUES.keys()]
 
 
 class QueueMixin(object):
+    form = JobAdminForm
 
     def get_form(self, request, obj=None, **kwargs):
         queue_field = self.model._meta.get_field('queue')
@@ -38,6 +40,7 @@ class ScheduledJobAdmin(QueueMixin, admin.ModelAdmin):
                 'scheduled_time',
                 'timeout',
             ),
+            'description': _('Please be aware: Scheduled Time has to be in the future.'),
         }),
     )
 
@@ -65,6 +68,7 @@ class RepeatableJobAdmin(QueueMixin, admin.ModelAdmin):
                 'repeat',
                 'timeout',
             ),
+            'description': _('Please be aware: Scheduled Time has to be in the future.'),
         }),
     )
 
