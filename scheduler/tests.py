@@ -99,13 +99,13 @@ class TestScheduledJob(TestCase):
 
     def test_clean(self):
         job = self.JobClass()
-        job.queue = settings.RQ_QUEUES.keys()[0]
+        job.queue = list(settings.RQ_QUEUES)[0]
         job.callable = 'scheduler.tests.test_job'
         assert job.clean() is None
 
     def test_clean_invalid(self):
         job = self.JobClass()
-        job.queue = settings.RQ_QUEUES.keys()[0]
+        job.queue = list(settings.RQ_QUEUES)[0]
         job.callable = 'scheduler.tests.test_non_callable'
         with self.assertRaises(ValidationError):
             job.clean()
@@ -182,6 +182,27 @@ class TestScheduledJob(TestCase):
         job.save()
         self.assertIsNone(job.job_id)
 
+    def test_save_and_schedule(self):
+        job = self.JobClassFactory()
+        job.id = 1
+        job.save()
+        is_scheduled = job.is_scheduled()
+        self.assertIsNotNone(job.job_id)
+        self.assertTrue(is_scheduled)
+
+    def test_delete_and_unschedule(self):
+        job_id = 1
+        job = self.JobClassFactory()
+        job.id = job_id
+        job.save()
+        is_scheduled = job.is_scheduled()
+        self.assertIsNotNone(job.job_id)
+        self.assertTrue(is_scheduled)
+        scheduler = job.scheduler()
+        job.delete()
+        is_scheduled = job_id in scheduler
+        self.assertFalse(is_scheduled)
+
 
 class TestRepeatableJob(TestScheduledJob):
 
@@ -235,14 +256,14 @@ class TestCronJob(TestScheduledJob):
     def test_clean(self):
         job = self.JobClass()
         job.cron_string = '* * * * *'
-        job.queue = settings.RQ_QUEUES.keys()[0]
+        job.queue = list(settings.RQ_QUEUES)[0]
         job.callable = 'scheduler.tests.test_job'
         assert job.clean() is None
 
     def test_clean_cron_string_invalid(self):
         job = self.JobClass()
         job.cron_string = 'not-a-cron-string'
-        job.queue = settings.RQ_QUEUES.keys()[0]
+        job.queue = list(settings.RQ_QUEUES)[0]
         job.callable = 'scheduler.tests.test_job'
         with self.assertRaises(ValidationError):
             job.clean_cron_string()
