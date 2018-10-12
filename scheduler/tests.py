@@ -497,6 +497,34 @@ class TestRepeatableJob(BaseTestCases.TestSchedulableJob):
         self.assertEqual(job.scheduled_time, base_time + timedelta(minutes=30))
         self.assertEqual(job.is_scheduled(), True)
 
+    def test_repeat_none_disable_then_enable(self):
+        base_time = timezone.now()
+        job = self.JobClassFactory(scheduled_time=base_time + timedelta(minutes=2),
+                                   repeat=None)
+        self.assertEqual(job.repeat, None)
+        self.assertEqual(job.enabled, True)
+        self.assertEqual(job.scheduled_time, base_time + timedelta(minutes=2))
+        self.assertEqual(job.is_scheduled(), True)
+        job.enabled = False
+        job.scheduled_time = base_time - timedelta(minutes=2)
+        job.save()
+        self.assertEqual(job.repeat, None)
+        self.assertEqual(job.enabled, False)
+        self.assertEqual(job.scheduled_time, base_time - timedelta(minutes=2))
+        self.assertEqual(job.is_scheduled(), False)
+        job.enabled = True
+        job.save()
+        self.assertEqual(job.repeat, None)
+        self.assertEqual(job.enabled, True)
+        self.assertEqual(job.scheduled_time, base_time - timedelta(minutes=2))
+        self.assertEqual(job.is_scheduled(), False)
+        job.scheduled_time = base_time + timedelta(minutes=2)
+        job.save()
+        self.assertEqual(job.repeat, None)
+        self.assertEqual(job.enabled, True)
+        self.assertEqual(job.scheduled_time, base_time + timedelta(minutes=2))
+        self.assertEqual(job.is_scheduled(), True)
+
 
 class TestCronJob(BaseTestCases.TestBaseJob):
     JobClass = CronJob

@@ -111,7 +111,10 @@ def count():
 9. Click the **Save** button to schedule the job.
 
 
+**IMPORTANT NOTE** (from [django-rq](https://github.com/rq/django-rq)): If you set up a repeated job, you must make sure that you
+either do not set a `result_ttl` (by setting as -1) value or you set a value larger than the interval (in seconds).
+Otherwise, the entry with the job details will expire and the job will not get re-scheduled.
+
 ## Reporting issues or Features
 
 Please report issues via [GitHub Issues](https://github.com/istrategylabs/django-rq-scheduler/issues) .
-
